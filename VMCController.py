@@ -43,11 +43,10 @@ class VMCController:
         self.cur_offset = offset
         return code
 
-    """
-    while(byte_offset){
-    """
-
     def while_byte_start(self, byte_offset):
+        """
+        while(byte_offset){
+        """
         return self.move_to_offset(byte_offset) + '['
 
     def while_byte_end(self, byte_offset):
@@ -62,11 +61,10 @@ class VMCController:
     def input_byte_ascii(self, byte_offset):
         return self.move_to_offset(byte_offset) + ','
 
-    """
-    Zeros the byte at from_offset
-    """
-
     def move_byte(self, from_offset, *to_offsets):
+        """
+        Zeros the byte at from_offset
+        """
         code_parts = [self.clear_byte(to_offset) for to_offset in to_offsets]
         code_parts.append(self.while_byte_start(from_offset))
         code_parts.append(self.increment_byte(from_offset, -1))
@@ -75,16 +73,11 @@ class VMCController:
         code_parts.append(self.while_byte_end(from_offset))
         return ''.join(code_parts)
 
-    """
-    Zeros the byte at from_offset
-    """
-
     def move_num(self, from_offset, *to_offsets):
+        """
+        Zeros the byte at from_offset
+        """
         return ''.join(self.move_byte(from_offset + i, *(x + i for x in to_offsets)) for i in range(self.num_size))
-
-    """
-    Zeros the byte at temp_offset and retains the byte at from_offset
-    """
 
     def copy_byte(self, from_offset, *to_offsets):
         temp = self.temp_allocator.alloc_temp()
@@ -93,22 +86,17 @@ class VMCController:
         self.temp_allocator.free(temp)
         return code
 
-    """
-    Zeros the num at temp_offset and retains the num at from_offset
-    """
-
     def copy_num(self, from_offset, *to_offsets):
         return ''.join(
             self.copy_byte(from_offset + i, *(offset + i for offset in to_offsets)) for i in range(self.num_size)
         )
 
-    """
-    Move to the VMC k vmcs to the right if k > 0
-    Else move to the VMC -k vmcs to the left
-    clears temp allocations
-    """
-
     def move_k_vmc(self, k):
+        """
+        Move to the VMC k vmcs to the right if k > 0
+        Else move to the VMC -k vmcs to the left
+        clears temp allocations
+        """
         if k == 0:
             return ''
         # clear temp allocations
@@ -164,10 +152,6 @@ class VMCController:
         self.temp_allocator.free(temp)
         return code
 
-    """
-    temp0 and temp1 must remain unchanged until end block
-    """
-
     def if_else_byte_if(self, cell_offset):
         temps = self.temp_allocator.alloc_temps(1)
         code = ''.join([
@@ -216,15 +200,14 @@ class VMCController:
             code_list.append(self.increment_byte(cell_offset, -1))
         return ''.join(code_list)
 
-    """
-    to_offset += from_offset
-    from_offset = 0
-    if sign==-1, to_offset -= from_offset
-    Using sign is faster than negating from_byte in the case of small from_byte
-    Value overflows will be carried carry bytes to the left of from_byte
-    """
-
     def add_byte(self, to_byte, from_byte, carry, sign=1):
+        """
+        to_offset += from_offset
+        from_offset = 0
+        if sign==-1, to_offset -= from_offset
+        Using sign is faster than negating from_byte in the case of small from_byte
+        Value overflows will be carried carry bytes to the left of from_byte
+        """
         return ''.join([
             self.while_byte_start(from_byte),
             self.increment_byte(from_byte, -1),
@@ -233,20 +216,18 @@ class VMCController:
             self.while_byte_end(from_byte)
         ])
 
-    """
-    to_offset += from_offset
-    from_offset = 0
-    substracts if sign=-1
-    """
-
     def add_num(self, to_offset, from_offset, sign=1):
+        """
+        to_offset += from_offset
+        from_offset = 0
+        substracts if sign=-1
+        """
         return ''.join(self.add_byte(to_offset + i, from_offset + i, i, sign) for i in range(self.num_size - 1, -1, -1))
 
-    """
-    to_offset += from_offset
-    """
-
     def add_num_preserving(self, to_offset, from_offset):
+        """
+        to_offset += from_offset
+        """
         temp = self.temp_allocator.alloc_temp()
         code = [
             self.copy_byte(from_offset, temp),
@@ -255,13 +236,12 @@ class VMCController:
         self.temp_allocator.free(temp)
         return ''.join(code)
 
-    """
-    to_byte -= from_byte
-    from_byte = 0
-    no carry
-    """
-
     def sub_byte(self, to_byte, from_byte):
+        """
+        to_byte -= from_byte
+        from_byte = 0
+        no carry
+        """
         return ''.join([
             self.while_byte_start(from_byte),
             self.increment_byte(from_byte, -1),
@@ -269,21 +249,19 @@ class VMCController:
             self.while_byte_end(from_byte)
         ])
 
-    """
-    to_num -= from_num
-    from_num = 0
-    """
-
     def sub_num(self, to_num, from_num):
+        """
+        to_num -= from_num
+        from_num = 0
+        """
         return ''.join([
             self.add_num(to_num, from_num, sign=-1)
         ])
 
-    """
-       to_byte -= from_byte
-    """
-
     def sub_byte_preserving(self, to_num, from_num):
+        """
+        to_byte -= from_byte
+        """
         temp = self.temp_allocator.alloc_temp()
         code = [
             self.copy_byte(from_num, temp),
@@ -292,11 +270,10 @@ class VMCController:
         self.temp_allocator.free(temp)
         return ''.join(code)
 
-    """
-    to_num -= from_num
-    """
-
     def sub_num_preserving(self, to_num, from_num):
+        """
+        to_num -= from_num
+        """
         temp = self.temp_allocator.alloc_temp()
         code = [
             self.copy_num(from_num, temp),
@@ -317,21 +294,19 @@ class VMCController:
     def binary_not_num(self, num_offset):
         return ''.join([self.binary_not_byte(num_offset + i) for i in range(self.num_size)])
 
-    """
-    two's complement negation
-    """
-
     def negate_num(self, num_offset):
+        """
+        two's complement negation
+        """
         return ''.join([
             self.binary_not_num(num_offset),
             self.increment_num(num_offset, 1)
         ])
 
-    """
-    Can be made much faster for 0 <= delta < num_size
-    """
-
     def increment_num(self, num_offset, delta):
+        """
+        Can be made much faster for 0 <= delta < num_size
+        """
         temp = self.temp_allocator.alloc_temp()
         code = []
         if delta > 0:
@@ -384,14 +359,13 @@ class VMCController:
         # code.append('{mem there}')
         return ''.join(code)
 
-    """
-    if input_byte > 0:
-        result_byte = 1
-    else:
-        retult_byte = 0
-    """
-
     def greater_equal_zero_byte(self, input_byte, result_byte):
+        """
+        if input_byte > 0:
+            result_byte = 1
+        else:
+            retult_byte = 0
+        """
         if_code, if_temps = self.if_else_byte_if(input_byte)
         return ''.join([
             if_code,

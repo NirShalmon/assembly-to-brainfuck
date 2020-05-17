@@ -1,0 +1,44 @@
+from VMCController import VMCController
+from Debugger import Debugger
+from Command import Command
+from CommandType import CommandType
+from Operand import OperandType
+
+
+def parse_vmc_definition(vmc_definition):
+    """
+    Parses the VMC definition at the start of the code file
+    """
+    num_size, cell_range, temp_amount, register_amount = [int(num) for num in vmc_definition.split()]
+    return VMCController(num_size, cell_range, temp_amount, register_amount)
+
+
+def parse_code(source):
+    """
+    Returns the VMCController, a list of Command objects, and a label_to_basic_block dictionary
+    """
+    source_lines = [line.strip() for line in source.splitlines()]
+    commands_text = [line[:line.find('#')].rstrip() for line in source_lines if len(line) > 0 and line[0] != '#']
+    controller = parse_vmc_definition(source_lines[0])
+    commands = []
+    label_to_basic_block = dict()
+    basic_block_idx = 0
+    for command_text in commands_text[1:]:
+        command = Command(command_text)
+        for operand in command.operands:
+            if operand.type == OperandType.label and operand.value not in label_to_basic_block:
+                label_to_basic_block[operand.value] = basic_block_idx + 1  # Label points to next basic block
+        if command.command_type.ends_basic_block():
+            basic_block_idx += 1
+        commands.append(command)
+    return controller, commands, label_to_basic_block
+
+
+def compile(source):
+    """
+    Returns the compiled brainfuck of source
+    """
+    controller, commands, label_to_basic_block = parse_code(source)
+    output = [controller.opening_code()]
+
+    return ''.join(output)
