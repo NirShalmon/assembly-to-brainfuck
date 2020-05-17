@@ -28,7 +28,7 @@ class RegisterList:
                 if not public_only or register.is_public:
                     return total_offset
                 else:
-                    raise Exception("Register is not public")
+                    raise ValueError("Register is not public")
             total_offset += register.size
         raise ValueError("Register not found")
 

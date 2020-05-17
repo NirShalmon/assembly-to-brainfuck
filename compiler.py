@@ -18,16 +18,15 @@ def parse_code(source):
     Returns the VMCController, a list of Command objects, and a label_to_basic_block dictionary
     """
     source_lines = [line.strip() for line in source.splitlines()]
-    commands_text = [line[:line.find('#')].rstrip() for line in source_lines if len(line) > 0 and line[0] != '#']
-    controller = parse_vmc_definition(source_lines[0])
+    commands_text = [(line[:line.find('#')] if '#' in line else line).rstrip() for line in source_lines if len(line) > 0 and line[0] != '#']
+    controller = parse_vmc_definition(commands_text[0])
     commands = []
     label_to_basic_block = dict()
     basic_block_idx = 0
     for command_text in commands_text[1:]:
         command = Command(command_text, controller.register_list, basic_block_idx)
-        for operand in command.operands:
-            if operand.type == OperandType.label and operand.value not in label_to_basic_block:
-                label_to_basic_block[operand.value] = basic_block_idx + 1  # Label points to next basic block
+        if command.command_type == CommandType.label:
+            label_to_basic_block[command.operands[0].value] = basic_block_idx + 1  # Label points to next basic block
         if command.command_type.ends_basic_block():
             basic_block_idx += 1
         commands.append(command)

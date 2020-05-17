@@ -3,6 +3,7 @@ from CommandType import CommandType
 from Command import Command
 from VMCController import VMCController
 from Operand import OperandType
+from compiler import parse_code
 
 
 class ParserTests(unittest.TestCase):
@@ -45,7 +46,31 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(command.operands[5].type, OperandType.immediate)
         self.assertEqual(command.operands[5].value, 0)
 
+    def test_parse_private_register(self):
+        controller = VMCController(4, 256, 14, 5)
+        command = Command("mov r0 r_heap_value", controller.register_list, 0)
+        self.assertEqual(command.operands[1].type, OperandType.label)
 
+    def test_code_parser(self):
+        source = """   #Comment  fasf 
+                    4 256 14 5 #vmc variables
+                    mov r0 1234
+                    jmp target
+                    label target
+                    push True
+                    label end"""
+        controller, commands, label_to_basic_block = parse_code(source)
+        self.assertEqual(controller.num_size, 4)
+        self.assertEqual(controller.cell_range, 256)
+        self.assertEqual(len(controller.offset_temp), 14)
+        self.assertEqual(len(controller.offset_reg), 5)
+        self.assertEqual(len(commands), 5)
+        self.assertEqual(commands[1].operands[0].value, 'target')
+        self.assertEqual(commands[3].operands[0].value, 1)
+        self.assertEqual(commands[1].basic_block_idx, 0)
+        self.assertEqual(commands[4].basic_block_idx, 2)
+        self.assertEqual(label_to_basic_block['target'], 2)
+        self.assertEqual(label_to_basic_block['end'], 3)
 
 
 if __name__ == '__main__':
