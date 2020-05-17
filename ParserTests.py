@@ -1,6 +1,8 @@
 import unittest
 from CommandType import CommandType
-
+from Command import Command
+from VMCController import VMCController
+from Operand import OperandType
 
 class ParserTests(unittest.TestCase):
     def test_all_command_types(self):
@@ -25,6 +27,22 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(CommandType.parse('read'), CommandType.read)
         self.assertEqual(CommandType.parse('write'), CommandType.write)
 
+    def test_command_parsing(self):
+        controller = VMCController(4, 256, 14, 5)
+        command = Command("mov r0 r4 1789 fasfa True False", controller.register_list, 0)
+        self.assertEqual(command.command_type, CommandType.mov)
+        self.assertEqual(command.operands[0].type, OperandType.register)
+        self.assertEqual(command.operands[0].value, controller.register_list.get_register_offset("r0"))
+        self.assertEqual(command.operands[1].type, OperandType.register)
+        self.assertEqual(command.operands[1].value, controller.register_list.get_register_offset("r4"))
+        self.assertEqual(command.operands[2].type, OperandType.immediate)
+        self.assertEqual(command.operands[2].value, 1789)
+        self.assertEqual(command.operands[3].type, OperandType.label)
+        self.assertEqual(command.operands[3].value, 'fasfa')
+        self.assertEqual(command.operands[4].type, OperandType.immediate)
+        self.assertEqual(command.operands[4].value, 1)
+        self.assertEqual(command.operands[5].type, OperandType.immediate)
+        self.assertEqual(command.operands[5].value, 0)
 
 if __name__ == '__main__':
     unittest.main()

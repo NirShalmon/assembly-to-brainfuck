@@ -24,7 +24,7 @@ def parse_code(source):
     label_to_basic_block = dict()
     basic_block_idx = 0
     for command_text in commands_text[1:]:
-        command = Command(command_text, basic_block_idx)
+        command = Command(command_text, controller.register_list, basic_block_idx)
         for operand in command.operands:
             if operand.type == OperandType.label and operand.value not in label_to_basic_block:
                 label_to_basic_block[operand.value] = basic_block_idx + 1  # Label points to next basic block

@@ -38,10 +38,10 @@ class Operand:
             return None
 
     def __init__(self, text, register_list):
-        if Operand.resolve_immediate(text):
+        if Operand.resolve_immediate(text) is not None:
             self.type = OperandType.immediate
             self.value = Operand.resolve_immediate(text)
-        elif Operand.resolve_register(text, register_list):
+        elif Operand.resolve_register(text, register_list) is not None:
             self.type = OperandType.register
             self.value = Operand.resolve_register(text, register_list)
         else:
