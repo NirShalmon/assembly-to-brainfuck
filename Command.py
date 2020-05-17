@@ -7,7 +7,7 @@ class Command:
     A single ASM command and it's operands
     """
 
-    def __init__(self, command_text):
+    def __init__(self, command_text, basic_block_idx):
         """
         Parses a command.
         The command should be without leading or trailing whitespaces, and without comments
@@ -16,3 +16,8 @@ class Command:
         command_parts = command_text.split()
         self.command_type = CommandType(command_parts[0])
         self.operands = [Operand(operand) for operand in command_parts[1:]]
+        self.basic_block_idx = basic_block_idx
+
+    def compile(self, controller, label_to_basic_block):
+        raise NotImplementedError()
+

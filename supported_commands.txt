@@ -7,6 +7,10 @@ False = 0
 True = cell_size^(num_size-1)
 False and True are immediate aliases
 
+Code must start with 4 space separated integers:
+num_sizes cell_range temp_amount register_amount
+
+
 Copy:
 mov r b
 load r b
@@ -26,6 +30,10 @@ logic_or r b b
 
 Binary:
 binary_not r b
+
+IO:
+read r
+write b
 
 Stack:
 push b

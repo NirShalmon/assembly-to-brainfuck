@@ -21,6 +21,8 @@ class CommandType(Enum):
     label = auto
     jnz = auto
     call = auto
+    read = auto
+    write = auto
 
     @classmethod
     def parse(cls, cmd):
@@ -42,7 +44,9 @@ class CommandType(Enum):
                         'jmp': CommandType.jmp,
                         'label': CommandType.label,
                         'jnz': CommandType.jnz,
-                        'call': CommandType.call}
+                        'call': CommandType.call,
+                        'read': CommandType.read,
+                        'write': CommandType.write}
         if cmd in parsing_dict:
             return parsing_dict[cmd]
         raise ValueError('Invalid command')

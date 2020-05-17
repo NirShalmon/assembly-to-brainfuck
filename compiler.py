@@ -24,7 +24,7 @@ def parse_code(source):
     label_to_basic_block = dict()
     basic_block_idx = 0
     for command_text in commands_text[1:]:
-        command = Command(command_text)
+        command = Command(command_text, basic_block_idx)
         for operand in command.operands:
             if operand.type == OperandType.label and operand.value not in label_to_basic_block:
                 label_to_basic_block[operand.value] = basic_block_idx + 1  # Label points to next basic block
@@ -39,6 +39,12 @@ def compile(source):
     Returns the compiled brainfuck of source
     """
     controller, commands, label_to_basic_block = parse_code(source)
+    if len(commands) == 0:
+        return ''
     output = [controller.opening_code()]
-
+    for command in commands:
+        output.append(command.compile(controller, label_to_basic_block))
+    if not commands[-1].command_type.ends_basic_block():
+        output.append(controller.basic_block_goto_next())
+    output.append(controller.closing_code())
     return ''.join(output)
