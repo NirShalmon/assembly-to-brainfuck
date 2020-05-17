@@ -24,33 +24,6 @@ class CommandType(Enum):
     read = auto()
     write = auto()
 
-    @classmethod
-    def parse(cls, cmd):
-        parsing_dict = {'mov': CommandType.mov,
-                        'load': CommandType.load,
-                        'store': CommandType.store,
-                        'neg': CommandType.neg,
-                        'add': CommandType.add,
-                        'sub': CommandType.sub,
-                        'less': CommandType.less,
-                        'eq': CommandType.eq,
-                        'logic_not': CommandType.logic_not,
-                        'logic_and': CommandType.logic_and,
-                        'logic_or': CommandType.logic_or,
-                        'binary_not': CommandType.binary_not,
-                        'push': CommandType.push,
-                        'pop': CommandType.pop,
-                        'ret': CommandType.ret,
-                        'jmp': CommandType.jmp,
-                        'label': CommandType.label,
-                        'jnz': CommandType.jnz,
-                        'call': CommandType.call,
-                        'read': CommandType.read,
-                        'write': CommandType.write}
-        if cmd in parsing_dict:
-            return parsing_dict[cmd]
-        raise ValueError('Invalid command')
-
     def ends_basic_block(self):
         """
         Does this command end it's basic block?

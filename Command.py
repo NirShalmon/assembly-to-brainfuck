@@ -14,7 +14,7 @@ class Command:
         Raises ValueError if the command is invalid
         """
         command_parts = command_text.split()
-        self.command_type = CommandType.parse(command_parts[0])
+        self.command_type = CommandType[command_parts[0]]
         self.operands = [Operand(operand, register_list) for operand in command_parts[1:]]
         self.basic_block_idx = basic_block_idx
 
