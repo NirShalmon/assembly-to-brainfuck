@@ -31,7 +31,7 @@ class VMCController:
         self.offset_stack_pointer = self.register_list.get_register_offset('r_stack_pointer')
         self.offset_flow_reserved = self.register_list.get_register_offset('r_flow_reserved')
         self.offset_reg = [self.register_list.get_register_offset(f'r{i}') for i in range(register_amount)]
-        self.offset_temp = [self.register_list.get_register_offset(f't{i}') for i in range(register_amount)]
+        self.offset_temp = [self.register_list.get_register_offset(f't{i}') for i in range(temp_amount)]
         self.temp_allocator = TempAllocator(self.vmc_size, self.offset_temp)
         self.debug = debug
 

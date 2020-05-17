@@ -20,7 +20,7 @@ class RegisterList:
     def get_register_offset(self, name, public_only=False):
         """
         If register name is found, and matches the public_only setting, than returns it's offset in the VMC.
-        Otherwise, raises Exception
+        Otherwise, raises ValueError
         """
         total_offset = 0
         for register in self.register_list:
@@ -28,9 +28,9 @@ class RegisterList:
                 if not public_only or register.is_public:
                     return total_offset
                 else:
-                    raise Exception("Register is not public")
+                    raise ValueError("Register is not public")
             total_offset += register.size
-        raise Exception("Register not found")
+        raise ValueError("Register not found")
 
     def total_size(self):
         """
