@@ -4,6 +4,7 @@ from Command import Command
 from VMCController import VMCController
 from Operand import OperandType
 
+
 class ParserTests(unittest.TestCase):
     def test_all_command_types(self):
         self.assertEqual(CommandType.parse('mov'), CommandType.mov)
@@ -43,6 +44,9 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(command.operands[4].value, 1)
         self.assertEqual(command.operands[5].type, OperandType.immediate)
         self.assertEqual(command.operands[5].value, 0)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

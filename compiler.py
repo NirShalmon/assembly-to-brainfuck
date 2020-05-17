@@ -34,6 +34,7 @@ def parse_code(source):
     return controller, commands, label_to_basic_block
 
 
+'''
 def compile(source):
     """
     Returns the compiled brainfuck of source
@@ -48,3 +49,4 @@ def compile(source):
         output.append(controller.basic_block_goto_next())
     output.append(controller.closing_code())
     return ''.join(output)
+'''
