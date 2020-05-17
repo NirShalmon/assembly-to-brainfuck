@@ -17,12 +17,11 @@ class RegisterList:
     def __init__(self, register_list):
         self.register_list = register_list
 
-    """
-    If register name is found, and matches the public_only setting, than returns it's offset in the VMC.
-    Otherwise, raises Exception
-    """
-
     def get_register_offset(self, name, public_only=False):
+        """
+        If register name is found, and matches the public_only setting, than returns it's offset in the VMC.
+        Otherwise, raises Exception
+        """
         total_offset = 0
         for register in self.register_list:
             if register.name == name:
@@ -33,17 +32,16 @@ class RegisterList:
             total_offset += register.size
         raise Exception("Register not found")
 
-    """
-    The sum of sizes of registers
-    """
-
     def total_size(self):
+        """
+        The sum of sizes of registers
+        """
         return sum([reg.size for reg in self.register_list])
 
-    """
-    Returns the offsets of the preserved registers
-    """
     def get_preserved_offsets(self):
+        """
+        Returns the offsets of the preserved registers
+        """
         preserved_offsets = []
         for register in self.register_list:
             if register.is_preserved:

@@ -11,11 +11,10 @@ class BrainfuckInterpreter:
         self.cell_range = cell_range
         self.while_mapper = self.map_whiles()
 
-    """
-    Create a dictionary to map indexes of [ and ] to the corresponding indexes
-    """
-
     def map_whiles(self):
+        """
+        Create a dictionary to map indexes of [ and ] to the corresponding indexes
+        """
         while_mapper = {}
         while_stack = []
         for idx, cmd in enumerate(self.code):
@@ -31,12 +30,11 @@ class BrainfuckInterpreter:
             raise Exception("Matching ']' not found")
         return while_mapper
 
-    """
-    Execute at most max_amount commands. Return amount of commands exe
-    Also returns a list of debug flags passed.
-    """
-
     def exec_commands(self, max_amount=1):
+        """
+        Execute at most max_amount commands. Return amount of commands exe
+        Also returns a list of debug flags passed.
+        """
         debug_flags = []
         for i in range(max_amount):
             if self.instruction_pointer < len(self.code) and self.code[self.instruction_pointer] == '{':
@@ -54,84 +52,75 @@ class BrainfuckInterpreter:
                 raise Exception(f"Unrecognized symbol {self.code[self.instruction_pointer]} in code")
         return max_amount, debug_flags
 
-    """
-    Read and return a debug flag from the code
-    """
-
     def read_debug_flag(self):
+        """
+        Read and return a debug flag from the code
+        """
         flag_end = self.code.find('}', self.instruction_pointer)
         flag = self.code[self.instruction_pointer + 1: flag_end]
         self.instruction_pointer = flag_end + 1
         return flag
 
-    """
-    Brainfuck +
-    """
-
     def inc_data(self):
+        """
+        Brainfuck +
+        """
         self.memory[self.data_pointer] += 1
         if self.memory[self.data_pointer] == self.cell_range:
             self.memory[self.data_pointer] = 0
         self.instruction_pointer += 1
 
-    """
-    Brainfuck -
-    """
-
     def dec_data(self):
+        """
+        Brainfuck -
+        """
         self.memory[self.data_pointer] -= 1
         if self.memory[self.data_pointer] == -1:
             self.memory[self.data_pointer] = self.cell_range - 1
         self.instruction_pointer += 1
 
-    """
-    Brainfuck >
-    """
-
     def move_right(self):
+        """
+        Brainfuck >
+        """
         self.data_pointer += 1
         self.instruction_pointer += 1
 
-    """
-    Brainfuck <
-    """
-
     def move_left(self):
+        """
+        Brainfuck <
+        """
         if self.data_pointer == 0:
             raise Exception("Negative data pointer!")
         self.data_pointer -= 1
         self.instruction_pointer += 1
 
-    """
-    Brainfuck .
-    """
-
     def print_cell(self):
+        """
+        Brainfuck .
+        """
         sys.stdout.write(chr(self.memory[self.data_pointer]))
         self.instruction_pointer += 1
 
-    """
-    Brainfuck ,
-    """
-
     def input_cell(self):
+        """
+        Brainfuck ,
+        """
         self.memory[self.data_pointer] = sys.stdin.read(1)
 
-    """
-    Brainfuck [
-    """
-
     def while_start(self):
+        """
+        Brainfuck [
+        """
         if self.memory[self.data_pointer] > 0:
             self.instruction_pointer += 1
         else:
             self.instruction_pointer = self.while_mapper[self.instruction_pointer] + 1
 
-    """
-    Brainfuck ]
-    """
-
     def while_end(self):
+        """
+        Brainfuck ]
+        """
         if self.memory[self.data_pointer] == 0:
             self.instruction_pointer += 1
         else:
