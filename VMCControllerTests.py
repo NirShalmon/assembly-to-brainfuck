@@ -25,31 +25,31 @@ class TestVMCController(unittest.TestCase):
         test_code.append(self.controller.set_byte(0, 12))
         if_code, temps = self.controller.if_else_byte_if(0)
         test_code.append(if_code)
-        test_code.append(self.controller.set_num(2, 12345))
+        test_code.append(self.controller.set_num(4, 12345))
         if_code, temps = self.controller.if_else_byte_else(0, temps)
         test_code.append(if_code)
-        test_code.append(self.controller.set_num(2, 54321))
+        test_code.append(self.controller.set_num(4, 54321))
         test_code.append(self.controller.if_else_byte_end(0, temps))
         debugger = Debugger(self.controller, ''.join(test_code))
         debugger.exec_commands(100000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(2), 12345)
+        self.assertEqual(debugger.get_vmc_value_unsigned(4), 12345)
 
     def test_if_else_false(self):
         test_code = []
         test_code.append(self.controller.set_byte(0, 0))
         if_code, temps = self.controller.if_else_byte_if(0)
         test_code.append(if_code)
-        test_code.append(self.controller.set_num(4, 12345))
+        test_code.append(self.controller.set_num(8, 12345))
         if_code, temps = self.controller.if_else_byte_else(0, temps)
         test_code.append(if_code)
-        test_code.append(self.controller.set_num(2, 54321))
+        test_code.append(self.controller.set_num(4, 54321))
         test_code.append(self.controller.if_else_byte_end(0, temps))
         debugger = Debugger(self.controller, ''.join(test_code))
         debugger.exec_commands(100000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(2), 54321)
-        self.assertEqual(debugger.get_vmc_value_unsigned(4), 0)
+        self.assertEqual(debugger.get_vmc_value_unsigned(4), 54321)
+        self.assertEqual(debugger.get_vmc_value_unsigned(8), 0)
 
     def test_decrement(self):
         code = [self.controller.set_num(0, 1),

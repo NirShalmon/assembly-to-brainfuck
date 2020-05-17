@@ -18,7 +18,8 @@ def parse_code(source):
     Returns the VMCController, a list of Command objects, and a label_to_basic_block dictionary
     """
     source_lines = [line.strip() for line in source.splitlines()]
-    commands_text = [(line[:line.find('#')] if '#' in line else line).rstrip() for line in source_lines if len(line) > 0 and line[0] != '#']
+    commands_text = [(line[:line.find('#')] if '#' in line else line).rstrip() for line in source_lines if
+                     len(line) > 0 and line[0] != '#']
     controller = parse_vmc_definition(commands_text[0])
     commands = []
     label_to_basic_block = dict()
@@ -33,8 +34,7 @@ def parse_code(source):
     return controller, commands, label_to_basic_block
 
 
-'''
-def compile(source):
+def compile_code(source):
     """
     Returns the compiled brainfuck of source
     """
@@ -48,4 +48,3 @@ def compile(source):
         output.append(controller.basic_block_goto_next())
     output.append(controller.closing_code())
     return ''.join(output)
-'''
