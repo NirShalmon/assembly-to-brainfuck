@@ -9,8 +9,9 @@ def parse_vmc_definition(vmc_definition):
     """
     Parses the VMC definition at the start of the code file
     """
-    num_size, cell_range, temp_amount, register_amount = [int(num) for num in vmc_definition.split()]
-    return VMCController(num_size, cell_range, temp_amount, register_amount)
+    is_debug = len(vmc_definition.split()) == 5 and vmc_definition.split()[-1] == 'True'
+    num_size, cell_range, temp_amount, register_amount = [int(num) for num in vmc_definition.split()[:4]]
+    return VMCController(num_size, cell_range, temp_amount, register_amount, is_debug)
 
 
 def parse_code(source):
@@ -41,7 +42,7 @@ def compile_code(source):
     controller, commands, label_to_basic_block = parse_code(source)
     if len(commands) == 0:
         return ''
-    output = [controller.opening_code()]
+    output = [controller.opening_code(), controller.basic_block_start()]
     for command in commands:
         output.append(command.compile(controller, label_to_basic_block))
     if not commands[-1].command_type.ends_basic_block():

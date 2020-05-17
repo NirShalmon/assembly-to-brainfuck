@@ -53,6 +53,8 @@ class VMCController:
         return self.move_to_offset(byte_offset) + ']'
 
     def increment_byte(self, byte_offset, delta=1):
+        if delta == 0:
+            return ''
         return self.move_to_offset(byte_offset) + ('+' * delta if delta > 0 else '-' * (-delta))
 
     def print_byte_ascii(self, byte_offset):
@@ -132,11 +134,11 @@ class VMCController:
         return self.clear_byte(cell_offset) + self.increment_byte(cell_offset, value - self.cell_range)
 
     def set_num(self, cell_offset, value):
+        if value < 0:
+            value = self.cell_range ** self.num_size + value
         code = [self.set_byte(cell_offset + i,
                               (abs(value) // (self.cell_range ** (self.num_size - i - 1))) % self.cell_range)
                 for i in range(self.num_size)]
-        if value < 0:
-            code.append(self.negate_num(cell_offset))
         return ''.join(code)
 
     def if_byte_if(self, cell_offset):
@@ -446,13 +448,18 @@ class VMCController:
         self.temp_allocator.free(temp)
         return ''.join(code)
 
-    def load_memory(self, address_offset, dest_offset):
+    def load_memory(self, address_offset, dest_offset, memory_offset=None):
+        if memory_offset is None:
+            memory_offset = self.offset_heap_value
         return self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc() \
-               + self.copy_num(self.offset_heap_value, dest_offset)
+               + self.copy_num(memory_offset, dest_offset)
 
-    def store_memory(self, address_offset, value_offset):
+    def store_memory(self, address_offset, value_offset, memory_offset=None):
+        if memory_offset is None:
+            memory_offset = self.offset_heap_value
+        print(value_offset, memory_offset, self.offset_temp[1])
         return self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc() \
-               + self.copy_num(value_offset, self.offset_heap_value)
+                + self.copy_num(value_offset, memory_offset)
 
     def opening_code(self):
         # dirty trick to enter the code loop with a positive number

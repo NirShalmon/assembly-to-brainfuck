@@ -47,3 +47,6 @@ class Operand:
         else:
             self.type = OperandType.label
             self.value = text
+
+    def __eq__(self, other):
+        return self.type == other.type and self.value == other.value
