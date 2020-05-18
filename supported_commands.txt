@@ -24,7 +24,7 @@ less r b b    - Unsigned comparision (except for immediate-immediate comparision
 eq r b b
 
 Logic:
-logic_not r b
+logic_not r     - r must contain True or False
 logic_and r b b
 logic_or r b b
 

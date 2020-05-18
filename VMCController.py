@@ -366,7 +366,7 @@ class VMCController:
         if input_byte > 0:
             result_byte = 1
         else:
-            retult_byte = 0
+            result_byte = 0
         """
         if_code, if_temps = self.if_else_byte_if(input_byte)
         return ''.join([

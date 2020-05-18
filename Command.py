@@ -62,7 +62,7 @@ class Command:
             CommandType.sub: self.compile_sub,
             CommandType.less: self.compile_less,
             CommandType.eq: self.compile_eq,
-            # CommandType.logic_not: self.compile_logic_not,
+            CommandType.logic_not: self.compile_logic_not,
             # CommandType.logic_and: self.compile_logic_and,
             # CommandType.logic_or: self.compile_or,
             # CommandType.binary_not = auto()
@@ -185,3 +185,9 @@ class Command:
         less_code = controller.equal_num(lhs_temp, rhs_temp, result_byte)
         controller.temp_allocator.free(lhs_temp, rhs_temp)
         return lhs_code + rhs_code + clear_code + less_code
+
+    def compile_logic_not(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_register()
+        result_byte = self.operands[0].value + controller.num_size - 1
+        return controller.logic_not_byte(result_byte)
