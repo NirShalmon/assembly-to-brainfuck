@@ -155,23 +155,23 @@ class VMCController:
         return code
 
     def if_else_byte_if(self, cell_offset):
-        temps = self.temp_allocator.alloc_temps(1)
+        temps = self.temp_allocator.alloc_temps(2)
         code = ''.join([
+            self.clear_byte(temps[1]),
             self.set_byte(temps[0], 1),
             self.while_byte_start(cell_offset)
         ])
         return code, temps
 
     def if_else_byte_else(self, cell_offset, temps):
-        temp_2 = self.temp_allocator.alloc_temp()
         code = ''.join([
             self.increment_byte(temps[0], -1),
-            self.move_byte(cell_offset, temp_2),
+            self.move_byte(cell_offset, temps[1]),
             self.while_byte_end(cell_offset),
-            self.move_byte(temp_2, cell_offset),
+            self.move_byte(temps[1], cell_offset),
             self.while_byte_start(temps[0])
         ])
-        self.temp_allocator.free(temp_2)
+        self.temp_allocator.free(temps[1])
         return code, temps
 
     def if_else_byte_end(self, cell_offset, temps):
@@ -510,7 +510,7 @@ class VMCController:
         return self.clear_byte(self.offset_flow_reserved) + self.while_byte_end(self.offset_flow_reserved)
 
     def basic_block_goto_next(self, diff=1):
-        return self.basic_block_end() + self.set_num(self.offset_cur_cmd, diff)
+        return self.set_num(self.offset_cur_cmd, diff) + self.basic_block_end()
 
     def closing_code(self):
         code = [

@@ -199,8 +199,20 @@ class AsmTests(unittest.TestCase):
         debugger = Debugger(controller, compile_code(code))
         debugger.exec_commands(10000000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 12340*2)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 12340 * 2)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 12340)
+
+    def test_add_neg_and_pos_registers(self):
+        code = """4 256 14 5 True
+                  mov r0 -2
+                  mov r2 4
+                  add r0 r0 r2"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 2)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 4)
 
     def test_sub_two_immediates(self):
         code = """4 256 14 5 True
@@ -746,7 +758,46 @@ class AsmTests(unittest.TestCase):
         debugger.exec_commands(10000000)
         self.assertTrue(debugger.execution_completed)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
-        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1+2+3+4+5)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), sum(range(6)))
+
+    def test_call_forward_ret(self):
+        code = """4 256 14 5 True
+                    call func
+                    mov r1 1
+                    jmp exit
+                    mov r2 1
+                    label func
+                    mov r0 1
+                    ret"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 0)
+
+    def test_call_backward_ret(self):
+        code = """4 256 14 5 True
+                    jmp after_func
+                    label func
+                    mov r0 1
+                    ret
+                    mov r3 1
+                    label after_func
+                    call func
+                    mov r1 1
+                    jmp exit
+                    mov r2 1
+                    """
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[3], as_signed_num=True), 0)
 
 
 

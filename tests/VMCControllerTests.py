@@ -59,6 +59,15 @@ class TestVMCController(unittest.TestCase):
         self.assertTrue(debugger.execution_completed)
         self.assertEqual(debugger.get_vmc_value(0), 0)
 
+    def test_add_neg_to_pos(self):
+        code = [self.controller.set_num(0, -2),
+                self.controller.set_num(4, 4),
+                self.controller.add_num(0, 4)]
+        debugger = Debugger(self.controller, ''.join(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(0), 2)
+
     def test_store(self):
         code = [self.controller.set_num(self.controller.offset_reg[0], 6)]
         code += [self.controller.set_byte(self.controller.offset_reg[2], 1)]

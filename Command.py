@@ -68,11 +68,11 @@ class Command:
             CommandType.binary_not: self.compile_binary_not,
             CommandType.push: self.compile_push,
             CommandType.pop: self.compile_pop,
-            #CommandType.ret = auto()
+            CommandType.ret: self.compile_ret,
             CommandType.jmp: self.compile_jmp,
             CommandType.label: self.compile_label,
             CommandType.jnz: self.compile_jnz,
-            # CommandType.call = auto()
+            CommandType.call: self.compile_call,
             # CommandType.read = auto()
             # CommandType.write = auto()
         }
@@ -262,7 +262,7 @@ class Command:
         if label_bb > self.basic_block_idx:
             diff = label_bb - self.basic_block_idx
         else:
-            diff = label_to_basic_block['exit'] - self.basic_block_idx + label_bb
+            diff = label_to_basic_block['exit'] - self.basic_block_idx + label_bb + 1
         return diff
 
     def compile_jmp(self, controller: VMCController, label_to_basic_block):
@@ -281,7 +281,38 @@ class Command:
                 controller.logic_not_byte(controller.offset_flow_reserved)]
         if_code, if_temps = controller.if_byte_if(controller.offset_flow_reserved)
         code.append(if_code)
-        code.append(controller.set_byte(controller.offset_cur_cmd, diff))
+        code.append(controller.set_num(controller.offset_cur_cmd, diff))
         code.append(controller.if_byte_end(controller.offset_flow_reserved, if_temps))
         code.append(controller.basic_block_end())
+        return ''.join(code)
+
+    def compile_call(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_label()
+        diff = self.calculate_basic_block_diff(label_to_basic_block, self.operands[0].value)
+        code = [controller.store_memory(controller.offset_stack_pointer, self.basic_block_idx + 1,
+                                        memory_offset=controller.offset_stack_value, value_is_immediate=True),
+                controller.increment_num(controller.offset_stack_pointer, 1),
+                controller.basic_block_goto_next(diff)]
+        return ''.join(code)
+
+    def compile_ret(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 0
+        target_bb_temp, source_bb_temp, exit_bb_temp = controller.temp_allocator.alloc_temps(3)
+        code = [controller.increment_num(controller.offset_stack_pointer, -1),
+                controller.load_memory(controller.offset_stack_pointer, target_bb_temp, controller.offset_stack_value),
+                controller.set_num(source_bb_temp, self.basic_block_idx),
+                controller.set_num(exit_bb_temp, label_to_basic_block['exit']),
+                controller.less_num(source_bb_temp, target_bb_temp, controller.offset_flow_reserved),
+                controller.sub_num(target_bb_temp, source_bb_temp)]
+        if_code, if_temps = controller.if_not_byte_if(controller.offset_flow_reserved)
+        code += [
+            if_code,
+            controller.add_num(target_bb_temp, exit_bb_temp),
+            controller.increment_num(target_bb_temp, 1),
+            controller.if_not_byte_end(controller.offset_flow_reserved, if_temps),
+            controller.move_num(target_bb_temp, controller.offset_cur_cmd),
+            controller.basic_block_end()
+        ]
+        controller.temp_allocator.free(target_bb_temp, source_bb_temp, exit_bb_temp)
         return ''.join(code)

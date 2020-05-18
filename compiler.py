@@ -32,6 +32,8 @@ def parse_code(source):
         if command.command_type.ends_basic_block():
             basic_block_idx += 1
         commands.append(command)
+    if not commands[-1].command_type.ends_basic_block():
+        basic_block_idx += 1
     label_to_basic_block['exit'] = basic_block_idx
     return controller, commands, label_to_basic_block
 
