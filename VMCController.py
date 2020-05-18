@@ -104,7 +104,7 @@ class VMCController:
         # Copy global data
         code_parts = []
         for reg in self.register_list.get_preserved_offsets():
-            code_parts.append(self.copy_num(reg, reg + target_vmc_offset))
+            code_parts.append(self.move_num(reg, reg + target_vmc_offset))
         # Update cell index, if k>0
         for vmc in range(0, k):
             code_parts.append(self.copy_num(self.offset_cell_index, self.vmc_size + self.offset_cell_index))
