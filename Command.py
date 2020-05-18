@@ -66,9 +66,9 @@ class Command:
             CommandType.logic_and: self.compile_logic_and,
             CommandType.logic_or: self.compile_logic_or,
             CommandType.binary_not: self.compile_binary_not,
-            # CommandType.push = auto()
-            # CommandType.pop = auto()
-            # CommandType.ret = auto()
+            CommandType.push: self.compile_push,
+            CommandType.pop: self.compile_pop,
+            #CommandType.ret = auto()
             # CommandType.jmp = auto()
             # CommandType.label = auto()
             # CommandType.jnz = auto()
@@ -239,3 +239,15 @@ class Command:
         assert self.operands[0].is_register()
         return controller.binary_not_num(self.operands[0].value)
 
+    def compile_push(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert not self.operands[0].is_label()
+        push_code = controller.store_memory(controller.offset_stack_pointer, self.operands[0].value, controller.offset_stack_value, self.operands[0].is_immediate())
+        return push_code + controller.increment_num(controller.offset_stack_pointer, 1)
+
+    def compile_pop(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_register()
+        dec_code = controller.increment_num(controller.offset_stack_pointer, -1)
+        pop_code = controller.load_memory(controller.offset_stack_pointer, self.operands[0].value, controller.offset_stack_value)
+        return dec_code + pop_code

@@ -686,6 +686,28 @@ class AsmTests(unittest.TestCase):
         self.assertTrue(debugger.execution_completed)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), -123456789-1)
 
+    def test_push_pop(self):
+        code = """4 256 14 5 True
+                    push 1234
+                    push -1
+                    mov r0 17
+                    push r0
+                    pop r1
+                    mov r0 3
+                    push r0
+                    pop r2
+                    pop r0
+                    pop r3"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 17)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 3)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), -1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[3], as_signed_num=True), 1234)
+
+
 
 if __name__ == '__main__':
     unittest.main()
