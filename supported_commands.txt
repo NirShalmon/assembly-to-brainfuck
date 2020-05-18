@@ -3,6 +3,9 @@ i - any const immediate
 l - label
 b - r or b
 
+exit label is at end of code
+start label is at start of code
+
 False = 0
 True = cell_size^(num_size-1)
 False and True are immediate aliases

@@ -707,6 +707,33 @@ class AsmTests(unittest.TestCase):
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), -1)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[3], as_signed_num=True), 1234)
 
+    def test_label_jmp(self):
+        code = """4 256 14 5 True
+                    jmp skip
+                    mov r0 1
+                    label skip
+                    mov r1 1
+                    jmp after
+                    label middle
+                    label another
+                    mov r2 1
+                    jmp pre_exit
+                    label after
+                    mov r4 1
+                    jmp middle
+                    mov r0 1
+                    label pre_exit
+                    mov r3 1"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[3], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[4], as_signed_num=True), 1)
+
 
 
 if __name__ == '__main__':

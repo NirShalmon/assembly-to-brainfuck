@@ -69,8 +69,8 @@ class Command:
             CommandType.push: self.compile_push,
             CommandType.pop: self.compile_pop,
             #CommandType.ret = auto()
-            # CommandType.jmp = auto()
-            # CommandType.label = auto()
+            CommandType.jmp: self.compile_jmp,
+            CommandType.label: self.compile_label,
             # CommandType.jnz = auto()
             # CommandType.call = auto()
             # CommandType.read = auto()
@@ -251,3 +251,18 @@ class Command:
         dec_code = controller.increment_num(controller.offset_stack_pointer, -1)
         pop_code = controller.load_memory(controller.offset_stack_pointer, self.operands[0].value, controller.offset_stack_value)
         return dec_code + pop_code
+
+    def compile_label(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_label()
+        return controller.basic_block_goto_next()
+
+    def compile_jmp(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_label()
+        label_bb = label_to_basic_block[self.operands[0].value]
+        if label_bb > self.basic_block_idx:
+            diff = label_bb - self.basic_block_idx
+        else:
+            diff = label_to_basic_block['exit'] - self.basic_block_idx + label_bb
+        return controller.basic_block_goto_next(diff)
