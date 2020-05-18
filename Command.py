@@ -59,7 +59,7 @@ class Command:
             CommandType.store: self.compile_store,
             CommandType.neg: self.compile_neg,
             CommandType.add: self.compile_add,
-            # CommandType.sub: self.compile_sub,
+            CommandType.sub: self.compile_sub,
             # CommandType.less: self.compile_less,
             # CommandType.eq: self.compile_eq,
             # CommandType.logic_not: self.compile_logic_not,
@@ -126,9 +126,26 @@ class Command:
         if self.operands[2].value == self.operands[0].value and self.operands[1].type == OperandType.immediate:
             return controller.increment_num(self.operands[0].value, self.operands[1].value)
         lhs_temp, lhs_code = force_value_in_temp(controller, self.operands[1])
+        rhs_temp, rhs_code = force_value_in_temp(controller, self.operands[2])
         first_copy = controller.move_num(lhs_temp, self.operands[0].value)
         controller.temp_allocator.free(lhs_temp)
-        rhs_temp, rhs_code = force_value_in_temp(controller, self.operands[2])
         add_code = controller.add_num(self.operands[0].value, rhs_temp)
         controller.temp_allocator.free(rhs_temp)
-        return lhs_code + first_copy + rhs_code + add_code
+        return lhs_code + rhs_code + first_copy + add_code
+
+    def compile_sub(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 3
+        assert self.operands[0].type == OperandType.register
+        assert self.operands[1].type != OperandType.label
+        assert self.operands[2].type != OperandType.label
+        if self.operands[1].type == OperandType.immediate and self.operands[2].type == OperandType.immediate:
+            return controller.set_num(self.operands[0].value, self.operands[1].value - self.operands[2].value)
+        if self.operands[1].value == self.operands[0].value and self.operands[2].type == OperandType.immediate:
+            return controller.increment_num(self.operands[0].value, -self.operands[2].value)
+        lhs_temp, lhs_code = force_value_in_temp(controller, self.operands[1])
+        rhs_temp, rhs_code = force_value_in_temp(controller, self.operands[2])
+        first_copy = controller.move_num(lhs_temp, self.operands[0].value)
+        controller.temp_allocator.free(lhs_temp)
+        add_code = controller.sub_num(self.operands[0].value, rhs_temp)
+        controller.temp_allocator.free(rhs_temp)
+        return lhs_code + rhs_code + first_copy + add_code
