@@ -61,7 +61,7 @@ class Command:
             CommandType.add: self.compile_add,
             CommandType.sub: self.compile_sub,
             CommandType.less: self.compile_less,
-            # CommandType.eq: self.compile_eq,
+            CommandType.eq: self.compile_eq,
             # CommandType.logic_not: self.compile_logic_not,
             # CommandType.logic_and: self.compile_logic_and,
             # CommandType.logic_or: self.compile_or,
@@ -165,5 +165,23 @@ class Command:
         rhs_temp, rhs_code = force_value_in_temp(controller, self.operands[2])
         clear_code = controller.clear_num(self.operands[0].value)
         less_code = controller.less_num(lhs_temp, rhs_temp, result_byte)
+        controller.temp_allocator.free(lhs_temp, rhs_temp)
+        return lhs_code + rhs_code + clear_code + less_code
+
+    def compile_eq(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 3
+        assert self.operands[0].is_register()
+        assert not self.operands[1].is_label()
+        assert not self.operands[2].is_label()
+        result_byte = self.operands[0].value + controller.num_size - 1
+        if self.operands[1].is_immediate() and self.operands[2].is_immediate():
+            if self.operands[1].value == self.operands[2].value:
+                return controller.clear_num(self.operands[0].value) + controller.set_byte(result_byte, 1)
+            else:
+                return controller.clear_num(self.operands[0].value) + controller.set_byte(result_byte, 0)
+        lhs_temp, lhs_code = force_value_in_temp(controller, self.operands[1])
+        rhs_temp, rhs_code = force_value_in_temp(controller, self.operands[2])
+        clear_code = controller.clear_num(self.operands[0].value)
+        less_code = controller.equal_num(lhs_temp, rhs_temp, result_byte)
         controller.temp_allocator.free(lhs_temp, rhs_temp)
         return lhs_code + rhs_code + clear_code + less_code
