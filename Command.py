@@ -152,10 +152,18 @@ class Command:
 
     def compile_less(self, controller: VMCController, label_to_basic_block):
         assert len(self.operands) == 3
-        assert self.operands[0].type == OperandType.register
-        assert self.operands[1].type != OperandType.label
-        assert self.operands[2].type != OperandType.label
-        code = [controller.clear_num(self.operands[0].value)]
+        assert self.operands[0].is_register()
+        assert not self.operands[1].is_label()
+        assert not self.operands[2].is_label()
         result_byte = self.operands[0].value + controller.num_size - 1
-        if self.operands[1].type == OperandType.immediate and self.operands[2].type == OperandType.immediate:
-            pass
+        if self.operands[1].is_immediate() and self.operands[2].is_immediate():
+            if self.operands[1].value < self.operands[2].value:
+                return controller.clear_num(self.operands[0].value) + controller.set_byte(result_byte, 1)
+            else:
+                return controller.clear_num(self.operands[0].value) + controller.set_byte(result_byte, 0)
+        lhs_temp, lhs_code = force_value_in_temp(controller, self.operands[1])
+        rhs_temp, rhs_code = force_value_in_temp(controller, self.operands[2])
+        clear_code = controller.clear_num(self.operands[0].value)
+        less_code = controller.less_num(lhs_temp, rhs_temp, result_byte)
+        controller.temp_allocator.free(lhs_temp, rhs_temp)
+        return lhs_code + rhs_code + clear_code + less_code

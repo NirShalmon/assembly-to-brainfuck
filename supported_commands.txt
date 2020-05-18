@@ -20,7 +20,7 @@ Math:
 neg r
 add r b b
 sub r b b
-less r b b    - Unsigned comparision
+less r b b    - Unsigned comparision (except for immediate-immediate comparision)
 eq r b b
 
 Logic:

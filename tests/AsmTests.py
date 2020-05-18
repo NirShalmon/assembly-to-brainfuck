@@ -290,6 +290,76 @@ class AsmTests(unittest.TestCase):
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 12340)
 
+    def test_less_immediates_true(self):
+        code = """4 256 14 5 True
+                  mov r0 123456789
+                  less r0 5 10"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+
+    def test_less_immediates_false(self):
+        code = """4 256 14 5 True
+                  mov r0 123456789
+                  less r0 789 10"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+
+    def test_less_registers_true(self):
+        code = """4 256 14 5 True
+                  mov r0 123456789
+                  mov r1 17
+                  mov r2 99
+                  less r0 r1 r2"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 17)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 99)
+
+    def test_less_registers_false(self):
+        code = """4 256 14 5 True
+                  mov r0 123456789
+                  mov r1 17
+                  mov r2 99
+                  less r0 r2 r1"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 17)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 99)
+
+    def test_less_register_self(self):
+        code = """4 256 14 5 True
+                  mov r0 123456789
+                  less r0 r0 r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+
+    def test_less_register_self_and_other(self):
+        code = """4 256 14 5 True
+                  mov r0 123456789
+                  mov r1 1
+                  less r0 r1 r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
