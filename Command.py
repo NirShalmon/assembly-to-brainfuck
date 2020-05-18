@@ -112,7 +112,7 @@ class Command:
     def compile_neg(self, controller: VMCController, label_to_basic_block):
         assert len(self.operands) == 1
         assert self.operands[0].type == OperandType.register
-        return controller.negate_num(self.operands[0])
+        return controller.negate_num(self.operands[0].value)
 
     def compile_add(self, controller: VMCController, label_to_basic_block):
         assert len(self.operands) == 3

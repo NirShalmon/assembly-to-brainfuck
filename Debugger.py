@@ -31,7 +31,7 @@ class Debugger:
         print(f'Data pointer: {self.interpreter.data_pointer}')
         for register in self.vmc_controller.register_list.register_list:
             offset = self.vmc_controller.register_list.get_register_offset(register.name)
-            print(f'{register.name}: {self.get_vmc_value(offset)}')
+            print(f'{register.name}: {self.get_vmc_value(offset, as_signed_num=True)}')
         print()
 
     def process_flag(self, flag):
@@ -80,5 +80,5 @@ class Debugger:
         return self.parse_num_signed(first_cell) if as_signed_num else self.parse_num_unsigned(first_cell)
 
     def full_debug_print(self):
-        print([self.get_memory(i) for i in range(100)])
+        print([self.get_memory(i, as_signed_num=True) for i in range(100)])
         self.print_vmc_cell()

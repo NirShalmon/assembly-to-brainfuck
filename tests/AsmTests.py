@@ -64,9 +64,44 @@ class AsmTests(unittest.TestCase):
         controller = VMCController(4, 256, 14, 5)
         debugger = Debugger(controller, compile_code(code))
         debugger.exec_commands(10000000)
-        debugger.full_debug_print()
         self.assertTrue(debugger.execution_completed)
         self.assertEqual(debugger.get_memory(2, as_signed_num=True), -9999)
+
+    def test_load_register_at_register(self):
+        code = """4 256 14 5 True
+                  mov r0 2
+                  mov r1 -9999
+                  store r0 r1
+                  load r2 r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_memory(2, as_signed_num=True), -9999)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), -9999)
+
+    def test_load_immidiate_at_register(self):
+        code = """4 256 14 5 True
+                  mov r0 2
+                  mov r1 -9999
+                  store r0 r1
+                  load r2 2"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_memory(2, as_signed_num=True), -9999)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), -9999)
+
+    def test_negate_negative_register(self):
+        code = """4 256 14 5 True
+                  mov r0 123456789
+                  neg r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), -123456789)
 
 
 if __name__ == '__main__':
