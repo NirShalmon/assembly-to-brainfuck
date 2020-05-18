@@ -734,6 +734,20 @@ class AsmTests(unittest.TestCase):
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[3], as_signed_num=True), 1)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[4], as_signed_num=True), 1)
 
+    def test_label_jnz(self):
+        code = """4 256 14 5 True
+                    mov r0 5
+                    label loop_start
+                    add r1 r1 r0
+                    sub r0 r0 1
+                    jnz r0 loop_start"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1+2+3+4+5)
+
 
 
 if __name__ == '__main__':

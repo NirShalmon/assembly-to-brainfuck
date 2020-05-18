@@ -71,7 +71,7 @@ class Command:
             #CommandType.ret = auto()
             CommandType.jmp: self.compile_jmp,
             CommandType.label: self.compile_label,
-            # CommandType.jnz = auto()
+            CommandType.jnz: self.compile_jnz,
             # CommandType.call = auto()
             # CommandType.read = auto()
             # CommandType.write = auto()
@@ -257,12 +257,31 @@ class Command:
         assert self.operands[0].is_label()
         return controller.basic_block_goto_next()
 
-    def compile_jmp(self, controller: VMCController, label_to_basic_block):
-        assert len(self.operands) == 1
-        assert self.operands[0].is_label()
-        label_bb = label_to_basic_block[self.operands[0].value]
+    def calculate_basic_block_diff(self, label_to_basic_block, target):
+        label_bb = label_to_basic_block[target]
         if label_bb > self.basic_block_idx:
             diff = label_bb - self.basic_block_idx
         else:
             diff = label_to_basic_block['exit'] - self.basic_block_idx + label_bb
+        return diff
+
+    def compile_jmp(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_label()
+        diff = self.calculate_basic_block_diff(label_to_basic_block, self.operands[0].value)
         return controller.basic_block_goto_next(diff)
+
+    def compile_jnz(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 2
+        assert self.operands[0].is_register()
+        assert self.operands[1].is_label()
+        diff = self.calculate_basic_block_diff(label_to_basic_block, self.operands[1].value)
+        code = [controller.set_num(controller.offset_cur_cmd, 1),
+                controller.num_is_zero(self.operands[0].value, controller.offset_flow_reserved),
+                controller.logic_not_byte(controller.offset_flow_reserved)]
+        if_code, if_temps = controller.if_byte_if(controller.offset_flow_reserved)
+        code.append(if_code)
+        code.append(controller.set_byte(controller.offset_cur_cmd, diff))
+        code.append(controller.if_byte_end(controller.offset_flow_reserved, if_temps))
+        code.append(controller.basic_block_end())
+        return ''.join(code)

@@ -506,9 +506,11 @@ class VMCController:
         ]
         return ''.join(code)
 
+    def basic_block_end(self):
+        return self.clear_byte(self.offset_flow_reserved) + self.while_byte_end(self.offset_flow_reserved)
+
     def basic_block_goto_next(self, diff=1):
-        return self.clear_byte(self.offset_flow_reserved) + self.while_byte_end(self.offset_flow_reserved) \
-               + self.set_num(self.offset_cur_cmd, diff)
+        return self.basic_block_end() + self.set_num(self.offset_cur_cmd, diff)
 
     def closing_code(self):
         code = [
