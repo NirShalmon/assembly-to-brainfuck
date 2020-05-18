@@ -3,13 +3,16 @@ import sys
 
 class BrainfuckInterpreter:
 
-    def __init__(self, code, cell_range):
+    def __init__(self, code, cell_range, user_input="Hello World!"):
         self.code = code
         self.memory = []
         self.instruction_pointer = 0
         self.data_pointer = 0
         self.cell_range = cell_range
         self.while_mapper = self.map_whiles()
+        self.user_input = user_input
+        self.code_output = ""
+        self.input_progress = 0
 
     def map_whiles(self):
         """
@@ -99,14 +102,16 @@ class BrainfuckInterpreter:
         """
         Brainfuck .
         """
-        sys.stdout.write(chr(self.memory[self.data_pointer]))
+        self.code_output += chr(self.memory[self.data_pointer])
         self.instruction_pointer += 1
 
     def input_cell(self):
         """
         Brainfuck ,
         """
-        self.memory[self.data_pointer] = sys.stdin.read(1)
+        self.memory[self.data_pointer] = ord(self.user_input[self.input_progress])
+        self.input_progress += 1
+        self.instruction_pointer += 1
 
     def while_start(self):
         """

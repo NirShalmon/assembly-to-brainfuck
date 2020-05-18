@@ -47,3 +47,15 @@ class Operand:
         else:
             self.type = OperandType.label
             self.value = text
+
+    def is_immediate(self):
+        return self.type == OperandType.immediate
+
+    def is_register(self):
+        return self.type == OperandType.register
+
+    def is_label(self):
+        return self.type == OperandType.label
+
+    def __eq__(self, other):
+        return self.type == other.type and self.value == other.value

@@ -53,6 +53,8 @@ class VMCController:
         return self.move_to_offset(byte_offset) + ']'
 
     def increment_byte(self, byte_offset, delta=1):
+        if delta == 0:
+            return ''
         return self.move_to_offset(byte_offset) + ('+' * delta if delta > 0 else '-' * (-delta))
 
     def print_byte_ascii(self, byte_offset):
@@ -132,11 +134,11 @@ class VMCController:
         return self.clear_byte(cell_offset) + self.increment_byte(cell_offset, value - self.cell_range)
 
     def set_num(self, cell_offset, value):
+        if value < 0:
+            value = self.cell_range ** self.num_size + value
         code = [self.set_byte(cell_offset + i,
                               (abs(value) // (self.cell_range ** (self.num_size - i - 1))) % self.cell_range)
                 for i in range(self.num_size)]
-        if value < 0:
-            code.append(self.negate_num(cell_offset))
         return ''.join(code)
 
     def if_byte_if(self, cell_offset):
@@ -153,23 +155,23 @@ class VMCController:
         return code
 
     def if_else_byte_if(self, cell_offset):
-        temps = self.temp_allocator.alloc_temps(1)
+        temps = self.temp_allocator.alloc_temps(2)
         code = ''.join([
+            self.clear_byte(temps[1]),
             self.set_byte(temps[0], 1),
             self.while_byte_start(cell_offset)
         ])
         return code, temps
 
     def if_else_byte_else(self, cell_offset, temps):
-        temp_2 = self.temp_allocator.alloc_temp()
         code = ''.join([
             self.increment_byte(temps[0], -1),
-            self.move_byte(cell_offset, temp_2),
+            self.move_byte(cell_offset, temps[1]),
             self.while_byte_end(cell_offset),
-            self.move_byte(temp_2, cell_offset),
+            self.move_byte(temps[1], cell_offset),
             self.while_byte_start(temps[0])
         ])
-        self.temp_allocator.free(temp_2)
+        self.temp_allocator.free(temps[1])
         return code, temps
 
     def if_else_byte_end(self, cell_offset, temps):
@@ -364,14 +366,14 @@ class VMCController:
         if input_byte > 0:
             result_byte = 1
         else:
-            retult_byte = 0
+            result_byte = 0
         """
         if_code, if_temps = self.if_else_byte_if(input_byte)
         return ''.join([
             if_code,
             self.set_byte(result_byte, 1),
             self.if_else_byte_else(input_byte, if_temps),
-            self.set_byte(result_byte, 1),
+            self.set_byte(result_byte, 0),
             self.if_else_byte_end(input_byte, if_temps)
         ])
 
@@ -394,6 +396,22 @@ class VMCController:
                 self.increment_byte(byte_offset, -2),
                 self.if_byte_end(byte_offset, temp),
                 self.increment_byte(byte_offset, 1)]
+        return ''.join(code)
+
+    def logic_or_bytes(self, byte_a, byte_b, result_byte):
+        code = [self.set_byte(result_byte, 0)]
+        if_a_code, temp_a = self.if_byte_if(byte_a)
+        code += [
+            if_a_code,
+            self.set_byte(result_byte, 1),
+            self.if_byte_end(byte_a, temp_a)
+        ]
+        if_b_code, temp_b = self.if_byte_if(byte_b)
+        code += [
+            if_b_code,
+            self.set_byte(result_byte, 1),
+            self.if_byte_end(byte_b, temp_b)
+        ]
         return ''.join(code)
 
     def equal_byte(self, left_byte, right_byte, result_byte):
@@ -422,6 +440,15 @@ class VMCController:
         code += [self.if_byte_end(result_byte, temp)]
         return ''.join(code)
 
+    def num_is_zero(self, num_offset, result_byte):
+        code = [self.set_byte(result_byte, 1)]
+        for i in range(self.num_size):
+            if_code, if_temps = self.if_byte_if(num_offset + i)
+            code.append(if_code)
+            code.append(self.clear_byte(result_byte))
+            code.append(self.if_byte_end(result_byte, if_temps))
+        return ''.join(code)
+
     def equal_immediate_num(self, num_offset, imm, result_byte):
         temp = self.temp_allocator.alloc_temp()
         code = [self.set_byte(temp, imm),
@@ -446,13 +473,21 @@ class VMCController:
         self.temp_allocator.free(temp)
         return ''.join(code)
 
-    def load_memory(self, address_offset, dest_offset):
+    def load_memory(self, address_offset, dest_offset, memory_offset=None):
+        if memory_offset is None:
+            memory_offset = self.offset_heap_value
         return self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc() \
-               + self.copy_num(self.offset_heap_value, dest_offset)
+               + self.copy_num(memory_offset, dest_offset)
 
-    def store_memory(self, address_offset, value_offset):
-        return self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc() \
-               + self.copy_num(value_offset, self.offset_heap_value)
+    def store_memory(self, address_offset, value_offset, memory_offset=None, value_is_immediate=False):
+        if memory_offset is None:
+            memory_offset = self.offset_heap_value
+        code = self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc()
+        if value_is_immediate:
+            code += self.set_num(memory_offset, value_offset)
+        else:
+            code += self.copy_num(value_offset, memory_offset)
+        return code
 
     def opening_code(self):
         # dirty trick to enter the code loop with a positive number
@@ -466,19 +501,21 @@ class VMCController:
     def basic_block_start(self):
         code = [
             self.increment_num(self.offset_cur_cmd, -1),
-            self.equal_num(0, self.offset_cur_cmd, self.offset_flow_reserved),
+            self.num_is_zero(self.offset_cur_cmd, self.offset_flow_reserved),
             self.while_byte_start(self.offset_flow_reserved),
         ]
         return ''.join(code)
 
-    def basic_block_goto_next(self):
-        return self.clear_byte(self.offset_flow_reserved) + self.while_byte_end(self.offset_flow_reserved) \
-               + self.set_num(self.offset_cur_cmd, 1)
+    def basic_block_end(self):
+        return self.clear_byte(self.offset_flow_reserved) + self.while_byte_end(self.offset_flow_reserved)
+
+    def basic_block_goto_next(self, diff=1):
+        return self.set_num(self.offset_cur_cmd, diff) + self.basic_block_end()
 
     def closing_code(self):
         code = [
             self.increment_num(self.offset_cur_cmd, -1),
-            self.equal_num(0, self.offset_cur_cmd, self.offset_flow_reserved),
+            self.num_is_zero(self.offset_cur_cmd, self.offset_flow_reserved),
             self.logic_not_byte(self.offset_flow_reserved),
             self.while_byte_end(self.offset_flow_reserved)
         ]
