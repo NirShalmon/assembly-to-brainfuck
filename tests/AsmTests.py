@@ -799,6 +799,26 @@ class AsmTests(unittest.TestCase):
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 0)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[3], as_signed_num=True), 0)
 
+    def test_write_immediate(self):
+        code = """4 256 14 5 True
+                    write 20
+                    """
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.interpreter.code_output, chr(20))
+
+    def test_read_write(self):
+        code = """4 256 14 5 True
+                    read r0
+                    write r0
+                    """
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.interpreter.code_output, 'H')
 
 
 if __name__ == '__main__':

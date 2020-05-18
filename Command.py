@@ -73,8 +73,8 @@ class Command:
             CommandType.label: self.compile_label,
             CommandType.jnz: self.compile_jnz,
             CommandType.call: self.compile_call,
-            # CommandType.read = auto()
-            # CommandType.write = auto()
+            CommandType.read: self.compile_read,
+            CommandType.write: self.compile_write
         }
         return compile_functions[self.command_type](controller, label_to_basic_block)
 
@@ -316,3 +316,16 @@ class Command:
         ]
         controller.temp_allocator.free(target_bb_temp, source_bb_temp, exit_bb_temp)
         return ''.join(code)
+
+    def compile_read(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_register()
+        return controller.input_byte_ascii(self.operands[0].value + controller.num_size - 1)
+
+    def compile_write(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert not self.operands[0].is_label()
+        val, val_code = put_value_in_temp(controller, self.operands[0])
+        code = controller.print_byte_ascii(val + controller.num_size - 1)
+        free_possible_temp(controller, self.operands[0], val)
+        return val_code + code

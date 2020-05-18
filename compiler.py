@@ -1,3 +1,4 @@
+import sys
 from VMCController import VMCController
 from Debugger import Debugger
 from Command import Command
@@ -54,3 +55,16 @@ def compile_code(source):
         output.append(controller.basic_block_goto_next())
     output.append(controller.closing_code())
     return ''.join(output)
+
+
+def compile_file(source_file, output_file):
+    with open(source_file, 'r') as f_source:
+        source = f_source.read()
+    with open(output_file, 'w') as f_out:
+        f_out.write(compile_code(source))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print(f'Usage {sys.argv[0]} code_file output_file')
+    compile_file(sys.argv[1], sys.argv[2])
