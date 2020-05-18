@@ -65,7 +65,7 @@ class Command:
             CommandType.logic_not: self.compile_logic_not,
             CommandType.logic_and: self.compile_logic_and,
             CommandType.logic_or: self.compile_logic_or,
-            # CommandType.binary_not = auto()
+            CommandType.binary_not: self.compile_binary_not,
             # CommandType.push = auto()
             # CommandType.pop = auto()
             # CommandType.ret = auto()
@@ -233,4 +233,9 @@ class Command:
         and_code = controller.logic_or_bytes(lhs_temp + boolean_offset, rhs_temp + boolean_offset, self.operands[0].value + boolean_offset)
         controller.temp_allocator.free(lhs_temp, rhs_temp)
         return lhs_code + rhs_code + clear_code + and_code
+
+    def compile_binary_not(self, controller: VMCController, label_to_basic_block):
+        assert len(self.operands) == 1
+        assert self.operands[0].is_register()
+        return controller.binary_not_num(self.operands[0].value)
 

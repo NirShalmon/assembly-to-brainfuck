@@ -666,6 +666,26 @@ class AsmTests(unittest.TestCase):
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 0)
 
+    def test_binary_not_zero(self):
+        code = """4 256 14 5 True
+                     mov r0 0
+                     binary_not r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), -1)
+
+    def test_binary_not_long(self):
+        code = """4 256 14 5 True
+                     mov r0 123456789
+                     binary_not r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), -123456789-1)
+
 
 if __name__ == '__main__':
     unittest.main()
