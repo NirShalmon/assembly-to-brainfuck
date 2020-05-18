@@ -1,13 +1,12 @@
 r - any register name
 i - any const immediate
 l - label
-b - r or b
+b - r or i
 
-exit label is at end of code
-start label is at start of code
+The compiler adds automatic start and exit labels at the start and end of the code
 
 False = 0
-True = cell_size^(num_size-1)
+True = 1
 False and True are immediate aliases
 
 Code must start with 4 space separated integers:
@@ -20,19 +19,19 @@ load r b
 store b b
 
 Math:
-neg r
+neg r		  - Two's complement negation
 add r b b
 sub r b b
 less r b b    - Unsigned comparision (except for immediate-immediate comparision)
 eq r b b
 
 Logic:
-logic_not r     - r must contain True or False
-logic_and r r r - r must contain True or False
-logic_or r b b
+logic_not r     - registers must contain True or False
+logic_and r r r - registers must contain True or False
+logic_or r r r	- registers must contain True of False
 
 Binary:
-binary_not r    - r must contain True of False
+binary_not r    
 
 IO:
 read r
@@ -47,4 +46,4 @@ ret
 label l
 jmp l
 jnz r l
-call l    :=   push next_basic_block; goto label;
+call l
