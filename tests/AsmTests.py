@@ -570,6 +570,102 @@ class AsmTests(unittest.TestCase):
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
         self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 0)
 
+    def test_logic_or_self_true(self):
+        code = """4 256 14 5 True
+                  mov r0 True
+                  logic_or r0 r0 r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+
+    def test_logic_or_self_false(self):
+        code = """4 256 14 5 True
+                  mov r0 False
+                  logic_or r0 r0 r0"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+
+    def test_logic_or_with_two_equal_true(self):
+        code = """4 256 14 5 True
+                  mov r0 False
+                  mov r1 True
+                  logic_or r0 r1 r1"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1)
+
+    def test_logic_or_with_two_equal_false(self):
+        code = """4 256 14 5 True
+                  mov r0 True
+                  mov r1 False
+                  logic_or r0 r1 r1"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 0)
+
+    def test_logic_or_with_two_other_false(self):
+        code = """4 256 14 5 True
+                  mov r0 True
+                  mov r2 False
+                  mov r1 False
+                  logic_or r0 r1 r2"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 0)
+
+    def test_logic_or_with_two_other_true(self):
+        code = """4 256 14 5 True
+                  mov r0 True
+                  mov r2 False
+                  mov r1 True
+                  logic_or r0 r1 r2"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[2], as_signed_num=True), 0)
+
+    def test_logic_or_self_with_other_true(self):
+        code = """4 256 14 5 True
+                  mov r0 True
+                  mov r1 False
+                  logic_or r0 r0 r1"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 1)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 0)
+
+    def test_logic_or_self_with_other_false(self):
+        code = """4 256 14 5 True
+                  mov r0 False
+                  mov r1 False
+                  logic_or r0 r0 r1"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0], as_signed_num=True), 0)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1], as_signed_num=True), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

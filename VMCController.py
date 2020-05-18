@@ -398,6 +398,22 @@ class VMCController:
                 self.increment_byte(byte_offset, 1)]
         return ''.join(code)
 
+    def logic_or_bytes(self, byte_a, byte_b, result_byte):
+        code = [self.set_byte(result_byte, 0)]
+        if_a_code, temp_a = self.if_byte_if(byte_a)
+        code += [
+            if_a_code,
+            self.set_byte(result_byte, 1),
+            self.if_byte_end(byte_a, temp_a)
+        ]
+        if_b_code, temp_b = self.if_byte_if(byte_b)
+        code += [
+            if_b_code,
+            self.set_byte(result_byte, 1),
+            self.if_byte_end(byte_b, temp_b)
+        ]
+        return ''.join(code)
+
     def equal_byte(self, left_byte, right_byte, result_byte):
         temps = self.temp_allocator.alloc_temps(1)
         code = [
