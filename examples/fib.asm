@@ -1,6 +1,6 @@
-3 256 14 5
+2 256 14 5
 
-mov r0 30
+mov r0 20
 call fib
 jmp exit
 
