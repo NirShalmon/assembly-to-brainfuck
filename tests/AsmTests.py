@@ -13,7 +13,7 @@ class AsmTests(unittest.TestCase):
         debugger = Debugger(controller, compile_code(code))
         debugger.exec_commands(10000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(controller.offset_reg[0]), 123456)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0]), 123456)
 
     def test_mov_register(self):
         code = """4 256 14 5
@@ -23,8 +23,8 @@ class AsmTests(unittest.TestCase):
         debugger = Debugger(controller, compile_code(code))
         debugger.exec_commands(100000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(controller.offset_reg[1]), 123456789)
-        self.assertEqual(debugger.get_vmc_value_unsigned(controller.offset_reg[0]), 123456789)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[1]), 123456789)
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0]), 123456789)
 
     def test_mov_register_to_self(self):
         code = """4 256 14 5
@@ -34,7 +34,7 @@ class AsmTests(unittest.TestCase):
         debugger = Debugger(controller, compile_code(code))
         debugger.exec_commands(100000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(controller.offset_reg[0]),
+        self.assertEqual(debugger.get_vmc_value(controller.offset_reg[0]),
                          controller.cell_range ** controller.num_size - 1)
 
     def test_store_immidiate_at_immidiate(self):
@@ -44,8 +44,29 @@ class AsmTests(unittest.TestCase):
         debugger = Debugger(controller, compile_code(code))
         debugger.exec_commands(10000000)
         self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_memory(2), 123456789)
+
+    def test_store_immidiate_at_register(self):
+        code = """4 256 14 5 True
+                  mov r0 2
+                  store r0 -123"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_memory(2, as_signed_num=True), -123)
+
+    def test_store_register_at_register(self):
+        code = """4 256 14 5 True
+                  mov r0 2
+                  mov r1 -9999
+                  store r0 r1"""
+        controller = VMCController(4, 256, 14, 5)
+        debugger = Debugger(controller, compile_code(code))
+        debugger.exec_commands(10000000)
         debugger.full_debug_print()
-        self.assertEqual(debugger.get_memory_unsigned(2), 123456789)
+        self.assertTrue(debugger.execution_completed)
+        self.assertEqual(debugger.get_memory(2, as_signed_num=True), -9999)
 
 
 if __name__ == '__main__':

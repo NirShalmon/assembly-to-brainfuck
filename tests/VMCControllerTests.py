@@ -16,9 +16,9 @@ class TestVMCController(unittest.TestCase):
         debugger = Debugger(self.controller, test_code)
         debugger.exec_commands(100000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(0), 12345)
-        self.assertEqual(debugger.get_vmc_value_unsigned(4), 12345)
-        self.assertEqual(debugger.get_vmc_value_unsigned(8), self.controller.cell_range ** self.controller.num_size - 1)
+        self.assertEqual(debugger.get_vmc_value(0), 12345)
+        self.assertEqual(debugger.get_vmc_value(4), 12345)
+        self.assertEqual(debugger.get_vmc_value(8), self.controller.cell_range ** self.controller.num_size - 1)
 
     def test_if_else_true(self):
         test_code = []
@@ -33,7 +33,7 @@ class TestVMCController(unittest.TestCase):
         debugger = Debugger(self.controller, ''.join(test_code))
         debugger.exec_commands(100000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(4), 12345)
+        self.assertEqual(debugger.get_vmc_value(4), 12345)
 
     def test_if_else_false(self):
         test_code = []
@@ -48,8 +48,8 @@ class TestVMCController(unittest.TestCase):
         debugger = Debugger(self.controller, ''.join(test_code))
         debugger.exec_commands(100000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(4), 54321)
-        self.assertEqual(debugger.get_vmc_value_unsigned(8), 0)
+        self.assertEqual(debugger.get_vmc_value(4), 54321)
+        self.assertEqual(debugger.get_vmc_value(8), 0)
 
     def test_decrement(self):
         code = [self.controller.set_num(0, 1),
@@ -57,7 +57,7 @@ class TestVMCController(unittest.TestCase):
         debugger = Debugger(self.controller, ''.join(code))
         debugger.exec_commands(10000000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(0), 0)
+        self.assertEqual(debugger.get_vmc_value(0), 0)
 
     def test_store(self):
         code = [self.controller.set_num(self.controller.offset_reg[0], 6)]
@@ -83,11 +83,11 @@ class TestVMCController(unittest.TestCase):
         debugger.exec_commands(100000000)
         self.assertTrue(debugger.execution_completed)
         for i in range(0, 6, 2):
-            self.assertEqual(debugger.get_memory_unsigned(i), i)
-        self.assertEqual(debugger.get_memory_unsigned(6), 0)
-        self.assertEqual(debugger.get_memory_unsigned(1), 0)
+            self.assertEqual(debugger.get_memory(i), i)
+        self.assertEqual(debugger.get_memory(6), 0)
+        self.assertEqual(debugger.get_memory(1), 0)
         for i in range(5, 1, -2):
-            self.assertEqual(debugger.get_memory_unsigned(i), i)
+            self.assertEqual(debugger.get_memory(i), i)
 
     def test_sequential_basic_blocks(self):
         code = [self.controller.opening_code(),
@@ -101,8 +101,8 @@ class TestVMCController(unittest.TestCase):
         debugger = Debugger(self.controller, ''.join(code))
         debugger.exec_commands(100000000)
         self.assertTrue(debugger.execution_completed)
-        self.assertEqual(debugger.get_vmc_value_unsigned(self.controller.offset_reg[0]), 12345)
-        self.assertEqual(debugger.get_vmc_value_unsigned(self.controller.offset_reg[1]), 54321)
+        self.assertEqual(debugger.get_vmc_value(self.controller.offset_reg[0]), 12345)
+        self.assertEqual(debugger.get_vmc_value(self.controller.offset_reg[1]), 54321)
 
 
 if __name__ == '__main__':

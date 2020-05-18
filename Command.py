@@ -92,18 +92,19 @@ class Command:
         assert len(self.operands) == 2
         assert self.operands[0].type != OperandType.label
         assert self.operands[1].type != OperandType.label
-        addr_offset, addr_code = put_value_in_temp(controller, self.operands[0]) #TODO!!! temps get erased
-        value_offset, value_code = put_value_in_temp(controller, self.operands[1])
-        code = addr_code + value_code + controller.store_memory(addr_offset, value_offset)
+        addr_offset, addr_code = put_value_in_temp(controller, self.operands[0])
+        if self.operands[1].type == OperandType.immediate:
+            code = addr_code + controller.store_memory(addr_offset, self.operands[1].value, value_is_immediate=True)
+        else:
+            code = addr_code + controller.store_memory(addr_offset, self.operands[1].value)
         free_possible_temp(controller, self.operands[0], addr_offset)
-        free_possible_temp(controller, self.operands[1], value_offset)
         return code
 
     def compile_load(self, controller: VMCController, label_to_basic_block):
         assert len(self.operands) == 2
         assert self.operands[0].type == OperandType.register
         assert self.operands[1].type != OperandType.label
-        addr_offset, addr_code = put_value_in_temp(controller, self.operands[1])  #TODO!!! temps get erased
+        addr_offset, addr_code = put_value_in_temp(controller, self.operands[1])
         code = addr_code + controller.load_memory(addr_offset, self.operands[0].value)
         free_possible_temp(controller, self.operands[1], addr_offset)
         return code

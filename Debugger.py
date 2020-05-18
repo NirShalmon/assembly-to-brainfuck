@@ -11,11 +11,10 @@ class Debugger:
         self.commands_executed = 0
         self.execution_completed = False
 
-    """
-    Execute at most max_amount commands
-    """
-
     def exec_commands(self, max_amount=999999999999999):
+        """
+        Execute at most max_amount commands
+        """
         for i in range(max_amount):
             amount_executed, flags = self.interpreter.exec_commands(1)
             self.commands_executed += amount_executed
@@ -25,21 +24,20 @@ class Debugger:
             for flag in flags:
                 self.process_flag(flag)
 
-    """
-    Prints the current vmc cell's registers
-    """
     def print_vmc_cell(self):
+        """
+        Prints the current vmc cell's registers
+        """
         print(f'Data pointer: {self.interpreter.data_pointer}')
         for register in self.vmc_controller.register_list.register_list:
             offset = self.vmc_controller.register_list.get_register_offset(register.name)
-            print(f'{register.name}: {self.get_vmc_value_unsigned(offset)}')
+            print(f'{register.name}: {self.get_vmc_value(offset)}')
         print()
 
-    """
-    Process a debug flag
-    """
-
     def process_flag(self, flag):
+        """
+        Process a debug flag
+        """
         if flag.split()[0] == 'move_vmc':
             self.vmc_idx += int(flag.split()[1])
         elif flag.split()[0] == 'mem':
@@ -49,11 +47,10 @@ class Debugger:
         else:
             raise Exception("Unrecognized flag")
 
-    """
-    Parse an unsigned num from the program's memory, starting at first_cell
-    """
-
     def parse_num_unsigned(self, first_cell):
+        """
+        Parse an unsigned num from the program's memory, starting at first_cell
+        """
         result = 0
         for i in range(self.vmc_controller.num_size):
             mem_value = 0
@@ -62,20 +59,26 @@ class Debugger:
             result += mem_value * (self.vmc_controller.cell_range ** (self.vmc_controller.num_size - i - 1))
         return result
 
-    """
-    Return the value at a given memory address as a unsigned int
-    """
+    def parse_num_signed(self, first_cell):
+        unsigned_num = self.parse_num_unsigned(first_cell)
+        if unsigned_num >= (self.vmc_controller.cell_range ** self.vmc_controller.num_size) / 2:
+            return unsigned_num - self.vmc_controller.cell_range ** self.vmc_controller.num_size
+        return unsigned_num
 
-    def get_memory_unsigned(self, address):
-        return self.parse_num_unsigned(address * self.vmc_controller.vmc_size + self.vmc_controller.offset_heap_value)
+    def get_memory(self, address, as_signed_num=False):
+        """
+        Return the value at a given memory address
+        """
+        first_cell = address * self.vmc_controller.vmc_size + self.vmc_controller.offset_heap_value
+        return self.parse_num_signed(first_cell) if as_signed_num else self.parse_num_unsigned(first_cell)
 
-    """
-    Return the value at a offset from the current vmc as a unsigned int
-    """
-
-    def get_vmc_value_unsigned(self, offset):
-        return self.parse_num_unsigned(self.vmc_idx * self.vmc_controller.vmc_size + offset)
+    def get_vmc_value(self, offset, as_signed_num=False):
+        """
+        Return the value at a offset from the current vmc
+        """
+        first_cell = self.vmc_idx * self.vmc_controller.vmc_size + offset
+        return self.parse_num_signed(first_cell) if as_signed_num else self.parse_num_unsigned(first_cell)
 
     def full_debug_print(self):
-        print([self.get_memory_unsigned(i) for i in range(100)])
+        print([self.get_memory(i) for i in range(100)])
         self.print_vmc_cell()

@@ -373,7 +373,7 @@ class VMCController:
             if_code,
             self.set_byte(result_byte, 1),
             self.if_else_byte_else(input_byte, if_temps),
-            self.set_byte(result_byte, 1),
+            self.set_byte(result_byte, 0),
             self.if_else_byte_end(input_byte, if_temps)
         ])
 
@@ -424,6 +424,15 @@ class VMCController:
         code += [self.if_byte_end(result_byte, temp)]
         return ''.join(code)
 
+    def num_is_zero(self, num_offset, result_byte):
+        code = [self.set_byte(result_byte, 1)]
+        for i in range(self.num_size):
+            if_code, if_temps = self.if_byte_if(num_offset + i)
+            code.append(if_code)
+            code.append(self.clear_byte(result_byte))
+            code.append(self.if_byte_end(result_byte, if_temps))
+        return ''.join(code)
+
     def equal_immediate_num(self, num_offset, imm, result_byte):
         temp = self.temp_allocator.alloc_temp()
         code = [self.set_byte(temp, imm),
@@ -454,12 +463,15 @@ class VMCController:
         return self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc() \
                + self.copy_num(memory_offset, dest_offset)
 
-    def store_memory(self, address_offset, value_offset, memory_offset=None):
+    def store_memory(self, address_offset, value_offset, memory_offset=None, value_is_immediate=False):
         if memory_offset is None:
             memory_offset = self.offset_heap_value
-        print(value_offset, memory_offset, self.offset_temp[1])
-        return self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc() \
-                + self.copy_num(value_offset, memory_offset)
+        code = self.copy_num(address_offset, self.offset_target_cell) + self.goto_target_vmc()
+        if value_is_immediate:
+            code += self.set_num(memory_offset, value_offset)
+        else:
+            code += self.copy_num(value_offset, memory_offset)
+        return code
 
     def opening_code(self):
         # dirty trick to enter the code loop with a positive number
@@ -473,7 +485,7 @@ class VMCController:
     def basic_block_start(self):
         code = [
             self.increment_num(self.offset_cur_cmd, -1),
-            self.equal_num(0, self.offset_cur_cmd, self.offset_flow_reserved),
+            self.num_is_zero(self.offset_cur_cmd, self.offset_flow_reserved),
             self.while_byte_start(self.offset_flow_reserved),
         ]
         return ''.join(code)
@@ -485,7 +497,7 @@ class VMCController:
     def closing_code(self):
         code = [
             self.increment_num(self.offset_cur_cmd, -1),
-            self.equal_num(0, self.offset_cur_cmd, self.offset_flow_reserved),
+            self.num_is_zero(self.offset_cur_cmd, self.offset_flow_reserved),
             self.logic_not_byte(self.offset_flow_reserved),
             self.while_byte_end(self.offset_flow_reserved)
         ]
