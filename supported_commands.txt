@@ -25,11 +25,11 @@ eq r b b
 
 Logic:
 logic_not r     - r must contain True or False
-logic_and r b b
+logic_and r r r - r must contain True or False
 logic_or r b b
 
 Binary:
-binary_not r b
+binary_not r    - r must contain True of False
 
 IO:
 read r

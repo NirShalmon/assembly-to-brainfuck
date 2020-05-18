@@ -63,7 +63,7 @@ class Command:
             CommandType.less: self.compile_less,
             CommandType.eq: self.compile_eq,
             CommandType.logic_not: self.compile_logic_not,
-            # CommandType.logic_and: self.compile_logic_and,
+            CommandType.logic_and: self.compile_logic_and,
             # CommandType.logic_or: self.compile_or,
             # CommandType.binary_not = auto()
             # CommandType.push = auto()
@@ -191,3 +191,25 @@ class Command:
         assert self.operands[0].is_register()
         result_byte = self.operands[0].value + controller.num_size - 1
         return controller.logic_not_byte(result_byte)
+
+    def compile_logic_and(self, controller: VMCController, label_to_basic_block):
+        """
+        TODO: This can be made much much more efficient
+        """
+        assert len(self.operands) == 3
+        assert self.operands[0].is_register()
+        assert self.operands[1].is_register()
+        assert self.operands[2].is_register()
+        boolean_offset = controller.num_size - 1
+        if self.operands[1].value == self.operands[2].value:
+            if self.operands[0].value == self.operands[1].value:
+                return ''
+            else:
+                return controller.copy_byte(self.operands[1].value + boolean_offset, self.operands[0].value + boolean_offset)
+        lhs_temp, lhs_code = force_value_in_temp(controller, self.operands[1])
+        rhs_temp, rhs_code = force_value_in_temp(controller, self.operands[2])
+        clear_code = controller.clear_num(self.operands[0].value)
+        and_code = controller.logic_and_bytes(lhs_temp + boolean_offset, rhs_temp + boolean_offset, self.operands[0].value + boolean_offset)
+        controller.temp_allocator.free(lhs_temp, rhs_temp)
+        return lhs_code + rhs_code + clear_code + and_code
+
